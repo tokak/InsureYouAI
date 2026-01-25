@@ -18,4 +18,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\insureyou\img\team\.DS_Store" />
+  </ItemGroup>
+
 </Project>
