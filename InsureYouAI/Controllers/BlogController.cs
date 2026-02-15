@@ -1,5 +1,8 @@
 ﻿using InsureYouAI.Context;
+using InsureYouAI.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 
 namespace InsureYouAI.Controllers
@@ -45,7 +48,81 @@ namespace InsureYouAI.Controllers
 
             return PartialView();
         }
+        [HttpPost]
+        public async Task<IActionResult> AddComment(Comment comment)
+        {
+            comment.CommentDate = DateTime.Now;
+            comment.AppUserId = "4C62309C-5093-4B1A-98A6-0D061164E433";
 
+            using (var client = new HttpClient())
+            {
+                var apiKey = "";
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+                try
+                {
+                    var translateRequestBody = new
+                    {
+                        inputs = comment.CommentDetail
+                    };
+
+                    var translateJson = JsonSerializer.Serialize(translateRequestBody);
+                    var translateContent = new StringContent(translateJson, Encoding.UTF8, "application/json");
+
+                    var translateResponse = await client.PostAsync("https://router.huggingface.co/hf-inference/models/Helsinki-NLP/opus-mt-tr-en", translateContent);
+                    var translateResponseString = await translateResponse.Content.ReadAsStringAsync();
+
+                    string englishText = comment.CommentDetail;
+                    if (translateResponseString.TrimStart().StartsWith("["))
+                    {
+                        var translateDoc = JsonDocument.Parse(translateResponseString);
+                        englishText = translateDoc.RootElement[0].GetProperty("translation_text").GetString();
+                    }
+
+                    //ViewBag.v = englishText;
+
+                    var toxicRequestBody = new
+                    {
+                        inputs = englishText
+                    };
+
+                    var toxicJson = JsonSerializer.Serialize(toxicRequestBody);
+                    var toxicContent = new StringContent(toxicJson, Encoding.UTF8, "application/json");
+                    var toxicResponse = await client.PostAsync("https://router.huggingface.co/hf-inference/models/unitary/toxic-bert", toxicContent);
+                    var toxicResponseString = await toxicResponse.Content.ReadAsStringAsync();
+
+                    if (toxicResponseString.TrimStart().StartsWith("["))
+                    {
+                        var toxicDoc = JsonDocument.Parse(toxicResponseString);
+                        foreach (var item in toxicDoc.RootElement[0].EnumerateArray())
+                        {
+                            string label = item.GetProperty("label").GetString();
+                            double score = item.GetProperty("score").GetDouble();
+
+                            if (score > 0.5)
+                            {
+                                comment.CommentStatus = "Toksik Yorum";
+                                break;
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(comment.CommentStatus))
+                    {
+                        comment.CommentStatus = "Yorum Onaylandı";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    comment.CommentStatus = "Onay Bekliyor";
+                }
+            }
+
+
+            _context.Comments.Add(comment);
+            _context.SaveChanges();
+            return RedirectToAction("BlogList");
+        }
 
     }
 
