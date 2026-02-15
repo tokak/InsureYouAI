@@ -1,5 +1,27 @@
 ﻿@model List<Testimonial>
+<style>
+    .testimonial-active {
+        display: flex;
+    }
 
+    .equal-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+        /* Yorum metni sabit alan kaplasın */
+        .equal-card p {
+            min-height: 120px;
+        }
+
+        /* Author kısmı her zaman aşağıda kalsın */
+        .equal-card .testi-author {
+            margin-top: auto;
+        }
+
+</style>
 <section id="testimonial" class="testimonial-area pt-120 pb-30 p-relative fix" style="background-color: #28314b;">
     <div class="container">
         <div class="row">
@@ -13,7 +35,7 @@
                 <div class="testimonial-active" data-aos="fade-up" data-aos-duration="1400">
                @foreach(var item in Model)
                {
-                        <div class="single-testimonial">
+                        <div class="single-testimonial equal-card">
                             <p>“@item.CommentDetail”.</p>
                             <div class="qt-img">
                                 <img src="/insureyou/img/testimonial/qt-icon.png" alt="img">

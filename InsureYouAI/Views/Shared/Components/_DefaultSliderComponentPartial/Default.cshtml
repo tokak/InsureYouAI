@@ -8,7 +8,9 @@
 
         @foreach (var item in Model)
         {
-            <div class="single-slider slider-bg d-flex align-items-center" style="background-image: url(@item.ImageUrl); background-size: cover;">
+            <div class="single-slider slider-bg d-flex align-items-center"
+                 style="background-image: url(@item.ImageUrl); background-size: cover; background-position: center; min-height: 100vh; width: 100%;">
+
                 <div class="container">
                     <div class="row justify-content-center align-items-center">
 
@@ -21,9 +23,9 @@
                                 <div class="slider-btn mt-30 mb-105">
                                     <a href="#contact" class="btn ss-btn mr-15" data-animation="fadeInLeft" data-delay=".4s">Rezervasyon Oluştur </a>
                                 </div>
-
                             </div>
                         </div>
+
                         <div class="col-lg-5 col-md-5 p-relative">
                         </div>
 

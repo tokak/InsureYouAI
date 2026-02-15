@@ -1,5 +1,6 @@
 ﻿@model List<TrailerVideo>
 
+
 @foreach (var item in Model)
 {
     <section id="video" class="video-area p-relative" data-aos="fade-up" data-aos-duration="1000">
@@ -8,16 +9,18 @@
                 <div class="col-12">
                     <div class="s-video-wrap" style="background-image:url(@item.CoverImageUrl)">
                         <div class="s-video-content text-center">
-                            <h2>@item.Title</h2>
-                            <h6>
-                                <a href="@item.VideoUrl" class="popup-video mb-50"><img src="/defaultimages/play-button.png" alt="circle_right"></a><br>
-                                Tanıtım Videomuzu İzleyin
-                            </h6>
+                            <h2 class="video-title">@item.Title</h2>
 
+                            <div class="video-main-btn">
+                                <a href="@item.VideoUrl" class="popup-video">
+                                    <img src="/defaultimages/play-button.png" alt="Oynat">
+                                </a>
+                            </div>
+
+                            <span class="video-subtitle">Tanıtım Videomuzu İzleyin</span>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
