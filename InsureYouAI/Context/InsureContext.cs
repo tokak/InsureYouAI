@@ -1,4 +1,5 @@
 ﻿using InsureYouAI.Entities;
+using InsureYouAINew.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,5 +28,7 @@ namespace InsureYouAI.Context
         public DbSet<Gallery> Galleries { get; set; }
         public DbSet<Policy> Policies { get; set; }
         public DbSet<ClaudeAIMessage> ClaudeAIMessages { get; set; }
+        public DbSet<Revenue> Revenues { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
     }
 }

@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/AdminLayout/Index.cshtml";
+}
+
+@await Component.InvokeAsync("_DashboardWidgetsComponentPartial")
+
+<div class="row">
+   
+    @await Component.InvokeAsync("_DashboardMainChartComponentPartial")
+
+    @await Component.InvokeAsync("_DashboardSecondChartComponentPartial")
+   
+</div>
+
+<br /><br />
+
+@await Component.InvokeAsync("_DashboardSubWidgetsComponentPartial")
+
+<div class="row">
+   
+    @await Component.InvokeAsync("_DashboardForecastingPoliciesSalesComponentPartial")
+    @await Component.InvokeAsync("_DashboardPolicyTypesComponentPartial")
+  
+   
+
+</div><!--end row-->
+@* @await Component.InvokeAsync("_DashboardSubChartsComponentPartial")
+ *@
+
+
+<div class="row">
+    @await Component.InvokeAsync("_DashboardCommentListComponentPartial")
+
+    @await Component.InvokeAsync("_DashboardAppUserQuickViewTableComponentPartial")
+  
+
+</div>
+
+@await Component.InvokeAsync("_DashboardScriptsComponentPartial")
