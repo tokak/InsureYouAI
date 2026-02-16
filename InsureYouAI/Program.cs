@@ -1,5 +1,6 @@
 using InsureYouAI.Context;
 using InsureYouAI.Entities;
+using InsureYouAINew.Models;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>()
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -26,11 +28,15 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
 app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+app.MapHub<ChatHub>("/chathub");
 
 
 app.MapStaticAssets();

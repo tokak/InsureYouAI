@@ -1,0 +1,210 @@
+﻿@{
+    ViewData["Title"] = "SendChatWithAI";
+    Layout = "~/Views/AdminLayout/Index.cshtml";
+}
+
+<style>
+    .chat-wrapper {
+        width: 100%;
+        max-width: 750px;
+        margin: 30px auto;
+        border: 1px solid #ddd;
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+        background: #f5f7fb;
+    }
+
+    #chatHeader {
+        padding: 16px;
+        background: #28314b;
+        color: white;
+        font-weight: 600;
+        border-radius: 14px 14px 0 0;
+    }
+
+    #chatBody {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .message {
+        max-width: 70%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .user {
+        background: #28314b;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+
+    .ai {
+        background: white;
+        border: 1px solid #e2e2e2;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+    }
+
+    .time {
+        font-size: 11px;
+        opacity: .6;
+        margin-top: 4px;
+    }
+
+    #chatInputArea {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+        background: white;
+    }
+
+        #chatInputArea input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        #chatInputArea button {
+            margin-left: 8px;
+            padding: 10px 16px;
+            border: none;
+            background: #28314b;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+    .typing {
+        padding-left: 16px;
+        font-style: italic;
+        font-size: 13px;
+        color: #777;
+    }
+</style>
+
+<div class="chat-wrapper">
+
+    <div id="chatHeader">
+        🤖 Sigorta AI Asistanı
+    </div>
+
+    <div id="chatBody"></div>
+
+    <div id="typingIndicator" class="typing" style="display:none">
+        AI yazıyor...
+    </div>
+
+    <div id="chatInputArea">
+        <input id="messageInput" type="text" placeholder="Mesajınızı yazın..." />
+        <button id="sendBtn">Gönder</button>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+
+<script>
+
+    const chatBody = document.getElementById('chatBody');
+    const typing = document.getElementById('typingIndicator');
+    const input = document.getElementById('messageInput');
+
+    let aiBubble = null;
+    let aiStarted = false;
+
+    function getTime() {
+        return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    function addUserMessage(text) {
+        const msg = document.createElement('div');
+        msg.className = 'message user';
+        msg.innerHTML = `${text}<div class="time">${getTime()}</div>`;
+        chatBody.appendChild(msg);
+        scrollBottom();
+    }
+
+    function addAIBubble() {
+        aiBubble = document.createElement('div');
+        aiBubble.className = 'message ai';
+        aiBubble.innerHTML = `<span class="text"></span><div class="time">${getTime()}</div>`;
+        chatBody.appendChild(aiBubble);
+        scrollBottom();
+    }
+
+    function appendAIToken(token) {
+        if (!aiBubble) addAIBubble();
+        aiBubble.querySelector('.text').textContent += token;
+        scrollBottom();
+    }
+
+    function scrollBottom(){
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    const conn = new signalR.HubConnectionBuilder()
+        .withUrl("/chathub")
+        .withAutomaticReconnect()
+        .build();
+
+    conn.on("ReceiveUserEcho", text => {
+        addUserMessage(text);
+    });
+
+    conn.on("ReceiveToken", token => {
+
+        // İlk token geldiyse artık yazıyor
+        if(!aiStarted){
+            typing.innerText = "✍️ AI yazıyor...";
+            aiStarted = true;
+        }
+
+        appendAIToken(token);
+    });
+
+    conn.on("CompleteMessage", () => {
+        typing.style.display = 'none';
+        aiBubble = null;
+    });
+
+    async function start() {
+        try { await conn.start(); }
+        catch { setTimeout(start, 1500); }
+    }
+    start();
+
+    async function send(){
+        const text = input.value.trim();
+        if(!text) return;
+
+        input.value = "";
+        aiBubble = null;
+        aiStarted = false;
+
+    
+        typing.innerText = "⏳ AI bekleniyor...";
+        typing.style.display = 'block';
+
+        await conn.invoke("SendMessage", text);
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', send);
+
+    input.addEventListener('keydown', e => {
+        if(e.key === 'Enter') send();
+    });
+
+</script>
+
