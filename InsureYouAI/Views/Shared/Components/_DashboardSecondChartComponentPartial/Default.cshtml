@@ -4,21 +4,37 @@
             <div class="d-flex align-items-center mb-3">
                 <h6 class="mb-0">AI Grafik Portföyü</h6>
                 <div class="fs-5 ms-auto dropdown">
-                    <div class="dropdown-toggle dropdown-toggle-nocaret cursor-pointer" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></div>
+                    <div class="dropdown-toggle dropdown-toggle-nocaret cursor-pointer" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </div>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">Action</a></li>
-                        <li><a class="dropdown-item" href="#">Another action</a></li>
+                        <li><a class="dropdown-item" href="#">İşlem Yap</a></li>
+                        <li><a class="dropdown-item" href="#">Başka İşlem</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        <li><a class="dropdown-item" href="#">Diğer Seçenek</a></li>
                     </ul>
                 </div>
             </div>
-            <div id="chart2"></div>
+
+            <!-- Statik chart alanı -->
+            <div id="chart2" style="height:200px; display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px;">
+                <span style="font-weight:bold; color:#333;">Grafik Burada (Statik)</span>
+            </div>
         </div>
+
         <ul class="list-group list-group-flush mb-0 shadow-none">
-            <li class="list-group-item bg-transparent border-top"><i class="bi bi-circle-fill me-2 font-weight-bold text-primary"></i> Complete <span class="float-end">120</span></li>
-            <li class="list-group-item bg-transparent"><i class="bi bi-circle-fill me-2 font-weight-bold text-orange"></i> In Progress <span class="float-end">110</span></li>
-            <li class="list-group-item bg-transparent"><i class="bi bi-circle-fill me-2 font-weight-bold text-info"></i> Started <span class="float-end">70</span></li>
+            <li class="list-group-item bg-transparent border-top">
+                <i class="bi bi-circle-fill me-2 font-weight-bold text-primary"></i> Tamamlandı
+                <span class="float-end">120</span>
+            </li>
+            <li class="list-group-item bg-transparent">
+                <i class="bi bi-circle-fill me-2 font-weight-bold text-orange"></i> Devam Ediyor
+                <span class="float-end">110</span>
+            </li>
+            <li class="list-group-item bg-transparent">
+                <i class="bi bi-circle-fill me-2 font-weight-bold text-info"></i> Başladı
+                <span class="float-end">70</span>
+            </li>
         </ul>
     </div>
 </div>

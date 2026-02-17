@@ -1,6 +1,8 @@
 ﻿using InsureYouAI.Context;
 using InsureYouAI.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.ML;
+using Microsoft.ML.Transforms.TimeSeries;
 
 namespace InsureYouAINew.ViewComponents.DashboardViewComponents
 {
@@ -14,70 +16,86 @@ namespace InsureYouAINew.ViewComponents.DashboardViewComponents
 
         public IViewComponentResult Invoke()
         {
+            // 1️⃣ 2025 verisini çek
+            var policies = _context.Policies
+                .Where(x => x.StartDate >= new DateTime(2025, 1, 1) &&
+                            x.StartDate < new DateTime(2026, 1, 1))
+                .ToList();
 
-            // 1) Veri Hazırlığı – Son 6 Ay
-            var rawData = _context.Policies
-                .Where(x => x.CreatedDate >= new DateTime(2025, 5, 1) &&
-                            x.CreatedDate <= new DateTime(2025, 11, 30))
+
+            // 2️⃣ PolicyType bazlı aylık seri oluştur (Eksik ayları 0 doldur)
+            var rawData = policies
                 .GroupBy(x => x.PolicyType)
                 .Select(g => new
                 {
                     PolicyType = g.Key,
-                    MonthlyCounts = g
-                        .GroupBy(z => new { z.CreatedDate.Year, z.CreatedDate.Month })
-                        .Select(s => new { Month = s.Key.Month, Count = s.Count() })
-                        .OrderBy(s => s.Month)
+                    MonthlyCounts = Enumerable.Range(1, 12)   // 12 ay zorunlu
+                        .Select(m => new
+                        {
+                            Month = m,
+                            Count = g.Count(x => x.StartDate.Month == m)
+                        })
                         .ToList()
                 })
                 .ToList();
 
-            // 2) ML.NET Tahmin İçin Setup
-            //var ml = new MLContext();
 
+            // 3️⃣ ML Setup
+            var ml = new MLContext();
             List<PolicyForecastViewModel> result = new();
+
 
             foreach (var item in rawData)
             {
-                // ML.NET için input formatı
-                var mlData = item.MonthlyCounts.Select(m => new PolicyMonthlyData
+                // ML için sıralı index oluştur (0-11)
+                var mlData = item.MonthlyCounts
+                    .OrderBy(m => m.Month)
+                    .Select((m, i) => new PolicyMonthlyData
+                    {
+                        MonthIndex = i,
+                        Value = m.Count
+                    });
+
+                var dataView = ml.Data.LoadFromEnumerable(mlData);
+
+
+                // 4️⃣ SSA Tahmin Pipeline
+                var pipeline = ml.Forecasting.ForecastBySsa(
+                    outputColumnName: "Forecast",
+                    inputColumnName: "Value",
+                    windowSize: 3,
+                    seriesLength: 12,
+                    trainSize: 12,
+                    horizon: 1);
+
+                var model = pipeline.Fit(dataView);
+
+                var forecastEngine =
+                    model.CreateTimeSeriesEngine<PolicyMonthlyData, PolicyForecastOutput>(ml);
+
+                var prediction = forecastEngine.Predict();
+
+                int predicted = (int)Math.Max(0, prediction.Forecast[0]); // negatifleri engelle
+
+
+                result.Add(new PolicyForecastViewModel
                 {
-                    MonthIndex = m.Month,
-                    Value = m.Count
+                    PolicyType = item.PolicyType,
+                    ForecastCount = predicted
                 });
-
-                //var dataView = ml.Data.LoadFromEnumerable(mlData);
-
-                //var pipeline = ml.Forecasting.ForecastBySsa(
-                //    outputColumnName: "Forecast",
-                //    inputColumnName: "Value",
-                //    windowSize: 2,
-                //    seriesLength: 6,
-                //    trainSize: 6,
-                //    horizon: 1);
-
-                //var model = pipeline.Fit(dataView);
-
-                //var forecastEngine = model.CreateTimeSeriesEngine<PolicyMonthlyData, PolicyForecastOutput>(ml);
-
-                //var prediction = forecastEngine.Predict();
-
-                //int predicted = (int)prediction.Forecast[0];
-
-                //result.Add(new PolicyForecastViewModel
-                //{
-                //    PolicyType = item.PolicyType,
-                //    ForecastCount = predicted
-                //});
             }
 
-            // 3) Yüzde Hesabı
+
+            // 5️⃣ Yüzde Hesabı
             int total = result.Sum(x => x.ForecastCount);
 
             foreach (var item in result)
                 item.Percentage = total > 0 ? (item.ForecastCount * 100 / total) : 0;
 
+
             return View(result);
         }
+
     }
 
     public class PolicyMonthlyData
